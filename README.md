@@ -41,10 +41,10 @@ This will extract all frames from the `video.mkv` file and save them as PNG imag
 ## Example
 
 ```bash
-python split_mkv.py ~/videos/movie.mkv ~/frames --start-time 00:15:00 --end-time 00:20:00 --fps 30 --image-type jpg
+python frameSplit.py ./movie.mkv ./frames --start-time 00:15:00 --end-time 00:20:00 --fps 30 --image-type jpg
 ```
 
-This will extract frames from 15 minutes to 20 minutes in the `movie.mkv` file at 30 fps, saving them as JPG images in the `~/frames` directory.
+This will extract frames from 15 minutes to 20 minutes in the `movie.mkv` file at 30 fps, saving them as JPG images in the `./frames` directory.
 
 ## Dependencies
 

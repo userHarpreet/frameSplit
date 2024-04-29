@@ -12,7 +12,7 @@ def extract_frames(video_path, output_dir, start_time=None, end_time=None, fps=2
         output_dir (str): Path to the output directory for saving frames.
         start_time (str, optional): Start time in HH:MM:SS format. Defaults to None.
         end_time (str, optional): End time in HH:MM:SS format. Defaults to None.
-        fps (float, optional): Frames per second to extract. Defaults to None (original video fps).
+        fps (float, optional): Frames per second to extract. Defaults to 24.
         image_type (str, optional): Image file extension (e.g. 'jpg', 'png'). Defaults to 'jpg'.
     """
     os.makedirs(output_dir, exist_ok=True)
@@ -29,6 +29,8 @@ def extract_frames(video_path, output_dir, start_time=None, end_time=None, fps=2
 
     if end_time:
         end_seconds = sum(x * int(t) for x, t in zip([3600, 60, 1], end_time.split(":")))
+
+    cap.set(cv2.CAP_PROP_FPS, fps)  # Set the desired FPS
 
     frame_count = 0
     while True:
@@ -56,7 +58,7 @@ if __name__ == "__main__":
     parser.add_argument("output_dir", help="Path to the output directory for saving frames")
     parser.add_argument("--start-time", help="Start time in HH:MM:SS format")
     parser.add_argument("--end-time", help="End time in HH:MM:SS format")
-    parser.add_argument("--fps", type=float, help="Frames per second to extract")
+    parser.add_argument("--fps", type=float, default=24, help="Frames per second to extract (default: 24)")
     parser.add_argument("--image-type", default="jpg", choices=["jpg", "png", "bmp"], help="Image file extension")
 
     args = parser.parse_args()
