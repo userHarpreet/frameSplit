@@ -3,6 +3,8 @@ import os
 import cv2
 from collections import deque
 
+SUPPORTED_FORMATS = ['.mp4', '.avi', '.mov', '.mkv', '.flv', '.wmv']  # Add more formats as needed
+
 def extract_frames(video_path, output_dir, start_time=None, end_time=None, fps=24, image_type='jpg'):
     """
     Extracts frames from a video file and saves them as images.
@@ -15,6 +17,12 @@ def extract_frames(video_path, output_dir, start_time=None, end_time=None, fps=2
         fps (float, optional): Frames per second to extract. Defaults to 24.
         image_type (str, optional): Image file extension (e.g. 'jpg', 'png'). Defaults to 'jpg'.
     """
+    # Check if the video format is supported
+    _, ext = os.path.splitext(video_path)
+    if ext.lower() not in SUPPORTED_FORMATS:
+        print(f"Error: Unsupported video format '{ext}'. Supported formats: {', '.join(SUPPORTED_FORMATS)}")
+        return
+
     # Create the output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
 
