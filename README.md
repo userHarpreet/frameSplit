@@ -1,6 +1,6 @@
-# MKV Frame Splitter
+# Video Frame Splitter
 
-This Python project allows you to split an MKV video file into individual image frames.
+This Python project allows you to split a video file into individual image frames.
 
 ## Installation
 
@@ -18,13 +18,13 @@ pip install -r requirements.txt
 
 ## Usage
 
-To split an MKV file into frames, run the following command:
+To split an video file into frames, run the following command:
 
 ```bash
 python frameSplit.py [--start-time START_TIME] [--end-time END_TIME] [--fps FPS] [--image-type {jpg,png,bmp}] video_path output_dir
 ```
 
-This will extract all frames from the `video.mkv` file and save them as PNG images in the specified output directory.
+This will extract all frames from the `video` file and save them as PNG images in the specified output directory.
 
 ## Options 
 

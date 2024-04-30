@@ -1,7 +1,7 @@
 import argparse
 import os
 import cv2
-
+from collections import deque
 
 def extract_frames(video_path, output_dir, start_time=None, end_time=None, fps=24, image_type='jpg'):
     """
@@ -15,52 +15,83 @@ def extract_frames(video_path, output_dir, start_time=None, end_time=None, fps=2
         fps (float, optional): Frames per second to extract. Defaults to 24.
         image_type (str, optional): Image file extension (e.g. 'jpg', 'png'). Defaults to 'jpg'.
     """
+    # Create the output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
 
+    # Open the video file
     cap = cv2.VideoCapture(video_path)
-
     if not cap.isOpened():
         print(f"Error opening video file: {video_path}")
         return
 
+    # Get the original FPS of the video
+    video_fps = cap.get(cv2.CAP_PROP_FPS)
+    if fps <= 0:
+        print("Error: FPS must be a positive value.")
+        return
+
+    # Calculate the start and end frame numbers based on the provided start and end times
+    start_frame = 0
+    end_frame = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
     if start_time:
         start_seconds = sum(x * int(t) for x, t in zip([3600, 60, 1], start_time.split(":")))
-        cap.set(cv2.CAP_PROP_POS_MSEC, start_seconds * 1000)
+        start_frame = int(start_seconds * video_fps)
 
     if end_time:
         end_seconds = sum(x * int(t) for x, t in zip([3600, 60, 1], end_time.split(":")))
+        end_frame = int(end_seconds * video_fps)
 
-    cap.set(cv2.CAP_PROP_FPS, fps)  # Set the desired FPS
+    # Calculate the frame step based on the desired FPS and the video's FPS
+    frame_step_map = {
+        (fps == video_fps): 1,  # Process every frame if desired FPS matches video FPS
+        (fps > video_fps): max(int(video_fps / fps), 1),  # Round down, but ensure frame_step is at least 1
+        (fps < video_fps): int(video_fps / fps) + 1  # Round up to avoid skipping frames
+    }
+    frame_step = frame_step_map[True]
+    frame_out = 0
 
-    frame_count = 0
-    while True:
+    # Buffer frames in a deque
+    frame_queue = deque()
+    for frame_count in range(start_frame, end_frame, frame_step):
+        cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count)
         ret, frame = cap.read()
         if not ret:
             break
+        frame_queue.append((frame_count, frame))
 
-        if end_time and cap.get(cv2.CAP_PROP_POS_MSEC) / 1000 >= end_seconds:
-            break
-
-        filename = os.path.join(output_dir, f"frame_{frame_count:04d}.{image_type}")
+    # Write frames to disk
+    for frame_count, frame in frame_queue:
+        filename = os.path.join(output_dir, f"frame_{frame_count // frame_step:04d}.{image_type}")
         cv2.imwrite(filename, frame)
-        frame_count += 1
+        frame_out += 1
 
-        if cv2.waitKey(1) == ord('q'):
-            break
+    print(f"Total frame output: {frame_out}")
 
+    # Release resources
     cap.release()
     cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Extract frames from a video file.")
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(
+        description="Extract frames from a video file.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
     parser.add_argument("video_path", help="Path to the input video file")
     parser.add_argument("output_dir", help="Path to the output directory for saving frames")
     parser.add_argument("--start-time", help="Start time in HH:MM:SS format")
     parser.add_argument("--end-time", help="End time in HH:MM:SS format")
-    parser.add_argument("--fps", type=float, default=24, help="Frames per second to extract (default: 24)")
-    parser.add_argument("--image-type", default="jpg", choices=["jpg", "png", "bmp"], help="Image file extension")
+    parser.add_argument("--fps", type=float, default=24, help="Frames per second to extract")
+    parser.add_argument(
+        "--image-type",
+        default="jpg",
+        choices=["jpg", "png", "bmp"],
+        help="Image file extension",
+    )
 
     args = parser.parse_args()
 
+    # Call the extract_frames function with the parsed arguments
     extract_frames(args.video_path, args.output_dir, args.start_time, args.end_time, args.fps, args.image_type)
